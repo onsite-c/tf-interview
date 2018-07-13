@@ -107,3 +107,76 @@ data "aws_ami" "amazon-linux" {
 
   owners = ["137112412989"] # Amazon - us-east-1
 }
+
+data "template_file" "init" {
+  template = "${file("init.tpl")}"
+
+  vars {
+    ROOM_PARAM = "Voyager"
+  }
+}
+
+resource "aws_launch_template" "launch-template" {
+  name_prefix            = "interview"
+  image_id               = "${data.aws_ami.amazon-linux.id}"
+  instance_type          = "t2.micro"
+  vpc_security_group_ids = ["${aws_security_group.default.id}"]
+  key_name               = "${aws_key_pair.auth.id}"
+
+  user_data = "${base64encode(data.template_file.init.rendered)}"
+}
+
+resource "aws_autoscaling_group" "bar" {
+  name = "interview-asg"
+
+  availability_zones  = ["${aws_subnet.default.availability_zone}"]
+  vpc_zone_identifier = ["${aws_subnet.default.id}"]
+
+  desired_capacity          = 1
+  max_size                  = 1
+  min_size                  = 1
+  health_check_grace_period = 600
+  health_check_type         = "ELB"
+
+  load_balancers = ["${aws_elb.bar.name}"]
+
+  launch_template = {
+    id      = "${aws_launch_template.launch-template.id}"
+    version = "$$Latest"
+  }
+
+  timeouts {
+    delete = "15m"
+  }
+}
+
+resource "aws_elb" "bar" {
+  name    = "foobar-terraform-elb"
+  subnets = ["${aws_subnet.default.id}"]
+
+  listener {
+    instance_port     = 80
+    instance_protocol = "http"
+    lb_port           = 80
+    lb_protocol       = "http"
+  }
+
+  health_check {
+    healthy_threshold   = 2
+    unhealthy_threshold = 2
+    timeout             = 3
+    target              = "HTTP:80/"
+    interval            = 30
+  }
+
+  cross_zone_load_balancing   = true
+  idle_timeout                = 400
+  connection_draining         = true
+  connection_draining_timeout = 400
+
+  security_groups = ["${aws_security_group.elb.id}"]
+
+  tags {
+    Name = "foobar-terraform-elb"
+  }
+}

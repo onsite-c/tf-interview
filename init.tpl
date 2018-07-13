@@ -1,5 +1,6 @@
 #!/bin/bash
 
+ROOM_NAME=${ROOM_PARAM}
 yum update -y
 yum install -y httpd
 chkconfig httpd on
@@ -9,4 +10,4 @@ chown -R ec2-user:apache /var/www
 chmod 2775 /var/www
 find /var/www -type d -exec chmod 2775 {} \;
 find /var/www -type f -exec chmod 0664 {} \;
-echo "I am in room Voyager" > /var/www/html/index.html
+echo "I am in room $ROOM_NAME" > /var/www/html/index.html
