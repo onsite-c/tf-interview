@@ -1,7 +1,6 @@
 # Specify the provider and access details
 provider "aws" {
-  region  = "us-east-1"
-  profile = "interviewprofile"
+  region = "us-east-1"
 }
 
 # Create a VPC to launch our instances into
