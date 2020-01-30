@@ -7,26 +7,26 @@ provider "aws" {
 resource "aws_vpc" "interview-vpc" {
   cidr_block = "10.0.0.0/16"
 
-  tags {
+  tags = {
     Name = "interview-vpc"
   }
 }
 
 # Create an internet gateway to give our subnet access to the outside world
 resource "aws_internet_gateway" "default" {
-  vpc_id = "${aws_vpc.interview-vpc.id}"
+  vpc_id = aws_vpc.interview-vpc.id
 }
 
 # Grant the VPC internet access on its main route table
 resource "aws_route" "internet_access" {
-  route_table_id         = "${aws_vpc.interview-vpc.main_route_table_id}"
+  route_table_id         = aws_vpc.interview-vpc.main_route_table_id
   destination_cidr_block = "0.0.0.0/0"
-  gateway_id             = "${aws_internet_gateway.default.id}"
+  gateway_id             = aws_internet_gateway.default.id
 }
 
 # Create a subnet to launch our instances into
 resource "aws_subnet" "default" {
-  vpc_id                  = "${aws_vpc.interview-vpc.id}"
+  vpc_id                  = aws_vpc.interview-vpc.id
   cidr_block              = "10.0.1.0/24"
   map_public_ip_on_launch = true
 }
@@ -35,7 +35,7 @@ resource "aws_subnet" "default" {
 resource "aws_security_group" "elb" {
   name        = "terraform_example_elb"
   description = "Used in the terraform"
-  vpc_id      = "${aws_vpc.interview-vpc.id}"
+  vpc_id      = aws_vpc.interview-vpc.id
 
   # HTTP access from anywhere
   ingress {
@@ -59,7 +59,7 @@ resource "aws_security_group" "elb" {
 resource "aws_security_group" "default" {
   name        = "terraform_example"
   description = "Used in the terraform"
-  vpc_id      = "${aws_vpc.interview-vpc.id}"
+  vpc_id      = aws_vpc.interview-vpc.id
 
   # SSH access from anywhere
   ingress {
@@ -74,7 +74,7 @@ resource "aws_security_group" "default" {
     from_port   = 80
     to_port     = 80
     protocol    = "tcp"
-    cidr_blocks = ["${aws_vpc.interview-vpc.cidr_block}"]
+    cidr_blocks = [aws_vpc.interview-vpc.cidr_block]
   }
 
   # outbound internet access
@@ -88,7 +88,7 @@ resource "aws_security_group" "default" {
 
 resource "aws_key_pair" "auth" {
   key_name   = "interview-key"
-  public_key = "${file(var.public_key_path)}"
+  public_key = file(var.public_key_path)
 }
 
 data "aws_ami" "amazon-linux" {
@@ -106,3 +106,4 @@ data "aws_ami" "amazon-linux" {
 
   owners = ["137112412989"] # Amazon - us-east-1
 }
+
