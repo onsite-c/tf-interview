@@ -3,12 +3,18 @@ provider "aws" {
   region = "us-east-1"
 }
 
+resource random_string interview_id {
+  length    = 6
+  special   = false
+  min_lower = 6
+}
+
 # Create a VPC to launch our instances into
 resource "aws_vpc" "interview-vpc" {
   cidr_block = "10.0.0.0/16"
 
   tags = {
-    Name = "interview-vpc"
+    Name = "interview-vpc-${random_string.interview_id.result}"
   }
 }
 
@@ -33,7 +39,7 @@ resource "aws_subnet" "default" {
 
 # A security group for the ELB so it is accessible via the web
 resource "aws_security_group" "elb" {
-  name        = "terraform_example_elb"
+  name        = "terraform_example_elb-${random_string.interview_id.result}"
   description = "Used in the terraform"
   vpc_id      = aws_vpc.interview-vpc.id
 
@@ -57,7 +63,7 @@ resource "aws_security_group" "elb" {
 # Our default security group to access
 # the instances over SSH and HTTP
 resource "aws_security_group" "default" {
-  name        = "terraform_example"
+  name        = "terraform_example-${random_string.interview_id.result}"
   description = "Used in the terraform"
   vpc_id      = aws_vpc.interview-vpc.id
 
@@ -87,7 +93,7 @@ resource "aws_security_group" "default" {
 }
 
 resource "aws_key_pair" "auth" {
-  key_name   = "interview-key"
+  key_name   = "interview-key-${random_string.interview_id.result}"
   public_key = file(var.public_key_path)
 }
 
