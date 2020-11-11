@@ -26,8 +26,10 @@ resource "aws_route" "internet_access" {
 
 # Create a subnet to launch our instances into
 resource "aws_subnet" "default" {
+  count = 2
+
   vpc_id                  = aws_vpc.interview-vpc.id
-  cidr_block              = "10.0.1.0/24"
+  cidr_block              = cidrsubnet(aws_vpc.interview-vpc.cidr_block, 1, count.index)
   map_public_ip_on_launch = true
 }
 
@@ -106,4 +108,3 @@ data "aws_ami" "amazon-linux" {
 
   owners = ["137112412989"] # Amazon - us-east-1
 }
-
